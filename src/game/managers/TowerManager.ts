@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import type { TowerType, SlotPosition } from '@/types/game';
 import { Tower } from '@game/entities/Tower';
 import { TOWER_CONFIGS, UPGRADE_CONFIG, ECONOMY_CONFIG, SLOT_CONFIG, COLORS } from '@game/config/constants';
+import type { Enemy } from '@game/entities/Enemy';
 
-interface TowerSlot {
+export interface TowerSlot {
   x: number;
   y: number;
   tower: Tower | null;
@@ -173,7 +174,7 @@ export class TowerManager {
     return this.selectedTower;
   }
 
-  public update(enemies: any[]): void {
+  public update(enemies: Enemy[]): void {
     this.towers.forEach((tower) => {
       tower.update(enemies);
     });
