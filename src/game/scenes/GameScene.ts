@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { LevelConfig, TowerType } from '@/types/game';
 import { COLORS } from '@game/config/constants';
 import { WaveManager } from '@game/managers/WaveManager';
-import { TowerManager } from '@game/managers/TowerManager';
+import { TowerManager, type TowerSlot } from '@game/managers/TowerManager';
 import { Base } from '@game/entities/Base';
 import { useGameStore } from '@store/gameStore';
 
@@ -150,7 +150,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     // 建造塔
-    this.events.on('tryBuildTower', (towerType: TowerType, slot: any) => {
+    this.events.on('tryBuildTower', (towerType: TowerType, slot: TowerSlot) => {
       const buildCount = store.towerBuildCounts[towerType];
       const cost = this.towerManager.getTowerCost(towerType, buildCount);
 
