@@ -20,14 +20,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get PR diff
-        id: diff
+      - name: Get PR diff and save to file
         run: |
           git fetch origin ${{ github.base_ref }}
-          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD)
-          echo "diff<<EOF" >> $GITHUB_OUTPUT
-          echo "$DIFF" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr-diff.txt
 
       - name: Review with Claude API
         uses: actions/github-script@v7
@@ -41,7 +37,9 @@ jobs:
               return;
             }
 
-            const diff = `${{ steps.diff.outputs.diff }}`;
+            // Read diff from file
+            const fs = require('fs');
+            const diff = fs.readFileSync('/tmp/pr-diff.txt', 'utf8');
 
             // Call Claude API for code review
             const response = await fetch('https://api.anthropic.com/v1/messages', {
