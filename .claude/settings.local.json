@@ -6,7 +6,9 @@
       "Bash(claude plugin marketplace list)",
       "Bash(claude plugin marketplace list anthropic-agent-skills)",
       "Bash(claude plugin marketplace show anthropic-agent-skills)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
