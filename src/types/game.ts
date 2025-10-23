@@ -62,6 +62,7 @@ export interface GameState {
   currentLevel: number | null;
   currentWave: number;
   gold: number;
+  score: number;
   baseHP: number;
   maxBaseHP: number;
   isPaused: boolean;

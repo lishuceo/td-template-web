@@ -22,6 +22,10 @@ interface GameStore extends GameState {
   incrementTowerBuildCount: (type: TowerType) => void;
   resetTowerBuildCounts: () => void;
 
+  // Score tracking
+  addScore: (points: number) => void;
+  setScore: (score: number) => void;
+
   reset: () => void;
 }
 
@@ -29,6 +33,7 @@ const initialState: GameState = {
   currentLevel: null,
   currentWave: 0,
   gold: ECONOMY_CONFIG.INITIAL_GOLD,
+  score: 0,
   baseHP: BASE_CONFIG.INITIAL_HP,
   maxBaseHP: BASE_CONFIG.INITIAL_HP,
   isPaused: false,
@@ -50,6 +55,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     currentLevel: levelId,
     currentWave: 0,
     gold: startGold,
+    score: 0,
     baseHP: baseHP,
     maxBaseHP: baseHP,
     gameStatus: 'playing',
@@ -110,6 +116,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       aoe: 0,
     },
   }),
+
+  addScore: (points) => set((state) => ({ score: state.score + points })),
+
+  setScore: (score) => set({ score }),
 
   reset: () => set(initialState),
 }));
