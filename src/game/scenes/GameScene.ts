@@ -70,14 +70,14 @@ export class GameScene extends Phaser.Scene {
 
     // 绘制城墙（绿色高地，带立体感）- 在路径两侧
     // 路径本身不需要绘制，它只是被城墙围起来的地面
-    this.drawWalls(path, wallOffset, wallWidth);
+    this.drawWalls(path, wallOffset);
 
     // 绘制起点和终点标记
     this.drawStartPoint(path[0]);
     this.drawEndPoint(path[path.length - 1]);
   }
 
-  private drawWalls(path: { x: number; y: number }[], offset: number, width: number): void {
+  private drawWalls(path: { x: number; y: number }[], offset: number): void {
     const graphics = this.add.graphics();
 
     // 计算每个路径点的垂直向量（左侧墙点和右侧墙点）
@@ -145,78 +145,48 @@ export class GameScene extends Phaser.Scene {
       rightWallPoints.push({ x: curr.x - perpX, y: curr.y - perpY });
     }
 
-    // 3D效果常量
-    const depthOffset = 5; // 立体深度
+    // 长阴影偏移（向右下方）
+    const shadowOffsetX = 12;
+    const shadowOffsetY = 12;
 
-    // 1. 先绘制城墙阴影（最深的层）
-    graphics.lineStyle(width + 2, COLORS.WALL_DARK, 0.6);
+    // 1. 绘制长阴影（最底层）
+    graphics.fillStyle(0x000000, 0.3);
     graphics.beginPath();
-    graphics.moveTo(leftWallPoints[0].x + depthOffset, leftWallPoints[0].y + depthOffset);
+    graphics.moveTo(leftWallPoints[0].x + shadowOffsetX, leftWallPoints[0].y + shadowOffsetY);
     for (let i = 1; i < leftWallPoints.length; i++) {
-      graphics.lineTo(leftWallPoints[i].x + depthOffset, leftWallPoints[i].y + depthOffset);
+      graphics.lineTo(leftWallPoints[i].x + shadowOffsetX, leftWallPoints[i].y + shadowOffsetY);
     }
-    graphics.strokePath();
-
-    graphics.beginPath();
-    graphics.moveTo(rightWallPoints[0].x + depthOffset, rightWallPoints[0].y + depthOffset);
-    for (let i = 1; i < rightWallPoints.length; i++) {
-      graphics.lineTo(rightWallPoints[i].x + depthOffset, rightWallPoints[i].y + depthOffset);
+    for (let i = rightWallPoints.length - 1; i >= 0; i--) {
+      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX, rightWallPoints[i].y + shadowOffsetY);
     }
-    graphics.strokePath();
+    graphics.closePath();
+    graphics.fillPath();
 
-    // 2. 绘制城墙侧面（中间层，深绿色）
-    graphics.lineStyle(width, COLORS.WALL_SIDE, 1);
+    // 2. 绘制城墙侧面（深绿色，立体感）
+    graphics.fillStyle(COLORS.WALL_SIDE, 1);
     graphics.beginPath();
-    graphics.moveTo(leftWallPoints[0].x + depthOffset/2, leftWallPoints[0].y + depthOffset/2);
+    graphics.moveTo(leftWallPoints[0].x + shadowOffsetX/2, leftWallPoints[0].y + shadowOffsetY/2);
     for (let i = 1; i < leftWallPoints.length; i++) {
-      graphics.lineTo(leftWallPoints[i].x + depthOffset/2, leftWallPoints[i].y + depthOffset/2);
+      graphics.lineTo(leftWallPoints[i].x + shadowOffsetX/2, leftWallPoints[i].y + shadowOffsetY/2);
     }
-    graphics.strokePath();
-
-    graphics.beginPath();
-    graphics.moveTo(rightWallPoints[0].x + depthOffset/2, rightWallPoints[0].y + depthOffset/2);
-    for (let i = 1; i < rightWallPoints.length; i++) {
-      graphics.lineTo(rightWallPoints[i].x + depthOffset/2, rightWallPoints[i].y + depthOffset/2);
+    for (let i = rightWallPoints.length - 1; i >= 0; i--) {
+      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX/2, rightWallPoints[i].y + shadowOffsetY/2);
     }
-    graphics.strokePath();
+    graphics.closePath();
+    graphics.fillPath();
 
-    // 3. 绘制城墙顶部（最上层，亮绿色）
-    graphics.lineStyle(width, COLORS.WALL, 1);
+    // 3. 绘制城墙顶部（亮绿色）
+    graphics.fillStyle(COLORS.WALL, 1);
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x, leftWallPoints[0].y);
     for (let i = 1; i < leftWallPoints.length; i++) {
       graphics.lineTo(leftWallPoints[i].x, leftWallPoints[i].y);
     }
-    graphics.strokePath();
-
-    graphics.beginPath();
-    graphics.moveTo(rightWallPoints[0].x, rightWallPoints[0].y);
-    for (let i = 1; i < rightWallPoints.length; i++) {
+    for (let i = rightWallPoints.length - 1; i >= 0; i--) {
       graphics.lineTo(rightWallPoints[i].x, rightWallPoints[i].y);
     }
-    graphics.strokePath();
-
-    // 4. 在每个路径点处绘制圆形以平滑连接（三层）
-    // 阴影层
-    graphics.fillStyle(COLORS.WALL_DARK, 0.6);
-    for (let i = 0; i < path.length; i++) {
-      graphics.fillCircle(leftWallPoints[i].x + depthOffset, leftWallPoints[i].y + depthOffset, width / 2);
-      graphics.fillCircle(rightWallPoints[i].x + depthOffset, rightWallPoints[i].y + depthOffset, width / 2);
-    }
-
-    // 侧面层
-    graphics.fillStyle(COLORS.WALL_SIDE, 1);
-    for (let i = 0; i < path.length; i++) {
-      graphics.fillCircle(leftWallPoints[i].x + depthOffset/2, leftWallPoints[i].y + depthOffset/2, width / 2);
-      graphics.fillCircle(rightWallPoints[i].x + depthOffset/2, rightWallPoints[i].y + depthOffset/2, width / 2);
-    }
-
-    // 顶部层
-    graphics.fillStyle(COLORS.WALL, 1);
-    for (let i = 0; i < path.length; i++) {
-      graphics.fillCircle(leftWallPoints[i].x, leftWallPoints[i].y, width / 2);
-      graphics.fillCircle(rightWallPoints[i].x, rightWallPoints[i].y, width / 2);
-    }
+    graphics.closePath();
+    graphics.fillPath();
   }
 
   private drawStartPoint(point: { x: number; y: number }): void {
