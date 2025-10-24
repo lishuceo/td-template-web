@@ -11,8 +11,8 @@ export class Base extends Phaser.GameObjects.Container {
 
     const size = BASE_CONFIG.SIZE;
 
-    // 长阴影
-    this.shadow = scene.add.rectangle(8, 8, size, size, 0x000000, 0.3);
+    // 长阴影（增加阴影长度）
+    this.shadow = scene.add.rectangle(12, 12, size, size, 0x000000, 0.3);
     this.add(this.shadow);
 
     // 基地主体（绿色方块）

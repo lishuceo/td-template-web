@@ -66,16 +66,16 @@ export class Tower extends Phaser.GameObjects.Container {
     const size = 40;
     const color = this.getTowerColor();
 
-    // 长阴影
+    // 长阴影（增加阴影长度）
     if (this.towerType === 'arrow') {
-      this.shadow = this.scene.add.rectangle(6, 6, size, size, 0x000000, 0.3);
+      this.shadow = this.scene.add.rectangle(12, 12, size, size, 0x000000, 0.3);
       this.towerBody = this.scene.add.rectangle(0, 0, size, size, color);
     } else if (this.towerType === 'slow') {
-      this.shadow = this.scene.add.circle(6, 6, size / 2, 0x000000, 0.3);
+      this.shadow = this.scene.add.circle(12, 12, size / 2, 0x000000, 0.3);
       this.towerBody = this.scene.add.circle(0, 0, size / 2, color);
     } else {
       // AOE - 六边形
-      this.shadow = this.scene.add.polygon(6, 6, [
+      this.shadow = this.scene.add.polygon(12, 12, [
         -size / 2, 0,
         -size / 4, -size / 2,
         size / 4, -size / 2,

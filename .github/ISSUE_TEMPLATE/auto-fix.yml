@@ -1,0 +1,60 @@
+name: 🤖 AI Auto-Fix Request
+description: Automatically created issue for AI-driven fixes
+title: "[AUTO-FIX] "
+labels: ["auto-fix", "needs-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue was automatically created by the CI/CD system.
+        An AI agent will attempt to fix this issue automatically.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: What issue was detected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Additional context (PR, commit, file paths, etc.)
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggested Fix
+      description: Recommendations from code review or analysis
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical
+        - high
+        - medium
+        - low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - code-quality
+        - security
+        - performance
+        - bug
+        - type-error
+        - lint-error
+    validations:
+      required: true

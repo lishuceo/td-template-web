@@ -69,12 +69,12 @@ export class GameScene extends Phaser.Scene {
     // 绘制路径（带阴影效果）
     const path = this.levelConfig.path;
 
-    // 阴影
+    // 阴影（增加阴影长度）
     this.pathGraphics.lineStyle(35, 0x000000, 0.3);
     this.pathGraphics.beginPath();
-    this.pathGraphics.moveTo(path[0].x + 6, path[0].y + 6);
+    this.pathGraphics.moveTo(path[0].x + 12, path[0].y + 12);
     for (let i = 1; i < path.length; i++) {
-      this.pathGraphics.lineTo(path[i].x + 6, path[i].y + 6);
+      this.pathGraphics.lineTo(path[i].x + 12, path[i].y + 12);
     }
     this.pathGraphics.strokePath();
 
@@ -149,6 +149,12 @@ export class GameScene extends Phaser.Scene {
       this.gameOver(true);
     });
 
+    // 显示建造菜单
+    this.events.on('showBuildMenu', (slot: TowerSlot) => {
+      // 发送给React层显示菜单
+      this.events.emit('openBuildMenu', slot);
+    });
+
     // 建造塔
     this.events.on('tryBuildTower', (towerType: TowerType, slot: TowerSlot) => {
       const buildCount = store.towerBuildCounts[towerType];
@@ -192,9 +198,6 @@ export class GameScene extends Phaser.Scene {
     console.log(victory ? 'Victory!' : 'Defeat!');
   }
 
-  public setBuildMode(towerType: TowerType | null): void {
-    this.towerManager.setBuildMode(towerType);
-  }
 
   public upgradeTower(): boolean {
     const tower = this.towerManager.getSelectedTower();

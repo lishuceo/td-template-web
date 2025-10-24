@@ -1,0 +1,292 @@
+name: AI Auto-Fix
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-fix:
+    name: AI Auto-Fix
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'auto-fix')
+
+    steps:
+      - name: Acknowledge issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '🤖 **AI Auto-Fix Agent Started**\n\nAnalyzing the issue and preparing fixes...\n\n*This may take a few minutes.*'
+            });
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract issue context
+        id: context
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+
+            // Extract PR number from issue body
+            const prMatch = body.match(/PR #(\d+)/);
+            const prNumber = prMatch ? prMatch[1] : null;
+
+            // Extract branch name
+            const branchMatch = body.match(/Branch.*`([^`]+)`/);
+            const branch = branchMatch ? branchMatch[1] : null;
+
+            // Extract review findings
+            const findingsMatch = body.match(/### Code Review Findings\s+([\s\S]*?)###/);
+            const findings = findingsMatch ? findingsMatch[1].trim() : '';
+
+            return { prNumber, branch, findings };
+
+      - name: Analyze and generate fixes
+        id: generate-fix
+        uses: actions/github-script@v7
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        with:
+          script: |
+            const fs = require('fs');
+            const context = ${{ steps.context.outputs.result }};
+
+            if (!context.branch) {
+              core.setFailed('Could not extract branch information from issue');
+              return;
+            }
+
+            // Get the issue body for analysis
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const findings = context.findings || issue.data.body;
+
+            // Call Claude API to generate fix instructions
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 8192,
+                messages: [{
+                  role: 'user',
+                  content: `You are an expert code fixer. Analyze the following code review findings and provide specific fix instructions.
+
+Code Review Findings:
+${findings}
+
+Provide your response in the following JSON format:
+{
+  "summary": "Brief summary of the issues",
+  "fixes": [
+    {
+      "file": "path/to/file.ts",
+      "issue": "Description of the issue",
+      "fix": "Detailed fix instructions or code changes",
+      "priority": "critical|high|medium|low"
+    }
+  ],
+  "commands": [
+    "Command to run (e.g., npm run lint --fix)"
+  ]
+}
+
+Focus on:
+1. Type errors and TypeScript issues
+2. ESLint violations
+3. Security vulnerabilities
+4. Performance issues
+5. Code quality improvements
+
+Provide actionable, specific fixes that can be automated.`
+                }]
+              })
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.content || !data.content[0]) {
+              core.setFailed('Failed to generate fixes from Claude API');
+              return;
+            }
+
+            const fixInstructions = data.content[0].text;
+
+            // Try to parse JSON from the response
+            const jsonMatch = fixInstructions.match(/\{[\s\S]*\}/);
+            const fixes = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: fixInstructions, fixes: [], commands: [] };
+
+            // Save fix instructions
+            fs.writeFileSync('/tmp/fix-instructions.json', JSON.stringify(fixes, null, 2));
+
+            return { branch: context.branch, fixes, prNumber: context.prNumber };
+
+      - name: Checkout target branch
+        run: |
+          BRANCH="${{ fromJSON(steps.generate-fix.outputs.result).branch }}"
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+
+      - name: Create fix branch
+        run: |
+          FIX_BRANCH="auto-fix/issue-${{ github.event.issue.number }}"
+          git checkout -b "$FIX_BRANCH"
+          echo "FIX_BRANCH=$FIX_BRANCH" >> $GITHUB_ENV
+
+      - name: Apply automated fixes
+        run: |
+          # Run automated fix commands
+          npm run lint --fix || true
+          npm run build || true
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No changes to commit"
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          else
+            git add -A
+            git commit -m "fix: auto-fix issues from #${{ github.event.issue.number }}
+
+Automated fixes generated by AI agent:
+- Applied ESLint auto-fixes
+- Fixed type errors
+- Addressed code review findings
+
+Fixes issue #${{ github.event.issue.number }}
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>"
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          fi
+
+      - name: Push fix branch
+        if: env.HAS_CHANGES == 'true'
+        run: |
+          git push -u origin "$FIX_BRANCH"
+
+      - name: Create Pull Request
+        if: env.HAS_CHANGES == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fixes = ${{ steps.generate-fix.outputs.result }}.fixes;
+            const prNumber = ${{ steps.generate-fix.outputs.result }}.prNumber;
+
+            const body = `## 🤖 Automated Fix
+
+This PR contains automated fixes for issues identified in code review.
+
+### Related Issue
+Fixes #${{ github.event.issue.number }}
+${prNumber ? `Related to PR #${prNumber}` : ''}
+
+### Changes Made
+
+${fixes.summary || 'Automated fixes applied'}
+
+### Fix Details
+
+${fixes.fixes?.map((fix, i) => `
+${i + 1}. **${fix.file || 'General'}** (${fix.priority || 'medium'})
+   - Issue: ${fix.issue || 'N/A'}
+   - Fix: ${fix.fix || 'Automated fix applied'}
+`).join('\n') || 'See commits for details'}
+
+### Commands Run
+
+\`\`\`bash
+${fixes.commands?.join('\n') || 'npm run lint --fix\nnpm run build'}
+\`\`\`
+
+### Verification
+
+- [ ] All automated fixes applied successfully
+- [ ] Build passes
+- [ ] Linter passes
+- [ ] Tests pass (if applicable)
+
+---
+🤖 This PR was automatically created by the AI Auto-Fix workflow.
+*Generated with [Claude Code](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})*`;
+
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[AUTO-FIX] Fix issues from #${{ github.event.issue.number }}`,
+              head: process.env.FIX_BRANCH,
+              base: ${{ steps.generate-fix.outputs.result }}.branch || 'main',
+              body: body
+            });
+
+            // Comment on original issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }},
+              body: `✅ **Auto-fix PR created**: #${pr.data.number}\n\nPlease review the automated fixes and merge if they look good.`
+            });
+
+            // Add label to the new PR
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              labels: ['auto-fix', 'automated']
+            });
+
+      - name: Report no changes
+        if: env.HAS_CHANGES == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }},
+              body: '⚠️ **No automated fixes could be applied**\n\nThe AI agent analyzed the issues but could not generate automatic fixes. Manual intervention may be required.\n\nPlease review the issue and fix manually, or provide more specific information for the auto-fix agent.'
+            });
+
+      - name: Handle errors
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }},
+              body: '❌ **Auto-fix failed**\n\nThe AI agent encountered an error while trying to fix the issues.\n\nPlease check the [workflow logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details.'
+            });

@@ -1,16 +1,19 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import GameCanvas from '@components/GameCanvas';
 import HUD from '@components/HUD';
 import ControlPanel from '@components/ControlPanel';
 import LevelSelect from '@components/LevelSelect';
 import GameOverScreen from '@components/GameOverScreen';
+import TowerBuildMenu from '@components/TowerBuildMenu';
 import { getLevelById } from '@game/config/levels';
 import { useGameStore } from '@store/gameStore';
 import type { LevelConfig, TowerType } from '@/types/game';
 import type { GameScene } from '@game/scenes/GameScene';
+import type { TowerSlot } from '@game/managers/TowerManager';
 
 function App() {
   const [currentLevel, setCurrentLevel] = useState<LevelConfig | null>(null);
+  const [buildMenuSlot, setBuildMenuSlot] = useState<TowerSlot | null>(null);
   const gameSceneRef = useRef<GameScene | null>(null);
   const { gameStatus, togglePause, setGameSpeed, gameSpeed, reset } = useGameStore();
 
@@ -24,10 +27,31 @@ function App() {
 
   const handleGameReady = useCallback((scene: GameScene) => {
     gameSceneRef.current = scene;
+
+    // Listen for build menu open event
+    scene.events.on('openBuildMenu', (slot: TowerSlot) => {
+      setBuildMenuSlot(slot);
+    });
   }, []);
 
-  const handleBuildTower = useCallback((type: TowerType) => {
-    gameSceneRef.current?.setBuildMode(type);
+  // Clean up event listeners
+  useEffect(() => {
+    return () => {
+      if (gameSceneRef.current) {
+        gameSceneRef.current.events.off('openBuildMenu');
+      }
+    };
+  }, []);
+
+  const handleBuildTowerFromMenu = useCallback((type: TowerType) => {
+    if (buildMenuSlot && gameSceneRef.current) {
+      gameSceneRef.current.events.emit('tryBuildTower', type, buildMenuSlot);
+      setBuildMenuSlot(null);
+    }
+  }, [buildMenuSlot]);
+
+  const handleCloseBuildMenu = useCallback(() => {
+    setBuildMenuSlot(null);
   }, []);
 
   const handleStartWave = useCallback(() => {
@@ -68,11 +92,19 @@ function App() {
       </div>
 
       <ControlPanel
-        onBuildTower={handleBuildTower}
         onStartWave={handleStartWave}
         onTogglePause={handleTogglePause}
         onToggleSpeed={handleToggleSpeed}
       />
+
+      {buildMenuSlot && (
+        <TowerBuildMenu
+          x={buildMenuSlot.x}
+          y={buildMenuSlot.y}
+          onSelectTower={handleBuildTowerFromMenu}
+          onClose={handleCloseBuildMenu}
+        />
+      )}
 
       {(gameStatus === 'victory' || gameStatus === 'defeat') && (
         <GameOverScreen
