@@ -11,7 +11,6 @@ export class GameScene extends Phaser.Scene {
   private waveManager!: WaveManager;
   private towerManager!: TowerManager;
   private base!: Base;
-  private pathGraphics!: Phaser.GameObjects.Graphics;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -64,23 +63,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawPath(): void {
-    this.pathGraphics = this.add.graphics();
     const path = this.levelConfig.path;
     const pathWidth = 50;
-    const wallWidth = 35;
+    const wallWidth = 40;
     const wallOffset = pathWidth / 2 + wallWidth / 2;
 
-    // 1. 绘制城墙（蓝色高地）- 在路径两侧
+    // 绘制城墙（绿色高地，带立体感）- 在路径两侧
+    // 路径本身不需要绘制，它只是被城墙围起来的地面
     this.drawWalls(path, wallOffset, wallWidth);
-
-    // 2. 绘制路径（棕色地面道路）
-    this.pathGraphics.lineStyle(pathWidth, COLORS.PATH);
-    this.pathGraphics.beginPath();
-    this.pathGraphics.moveTo(path[0].x, path[0].y);
-    for (let i = 1; i < path.length; i++) {
-      this.pathGraphics.lineTo(path[i].x, path[i].y);
-    }
-    this.pathGraphics.strokePath();
 
     // 绘制起点和终点标记
     this.drawStartPoint(path[0]);
@@ -155,7 +145,42 @@ export class GameScene extends Phaser.Scene {
       rightWallPoints.push({ x: curr.x - perpX, y: curr.y - perpY });
     }
 
-    // 绘制左侧城墙
+    // 3D效果常量
+    const depthOffset = 5; // 立体深度
+
+    // 1. 先绘制城墙阴影（最深的层）
+    graphics.lineStyle(width + 2, COLORS.WALL_DARK, 0.6);
+    graphics.beginPath();
+    graphics.moveTo(leftWallPoints[0].x + depthOffset, leftWallPoints[0].y + depthOffset);
+    for (let i = 1; i < leftWallPoints.length; i++) {
+      graphics.lineTo(leftWallPoints[i].x + depthOffset, leftWallPoints[i].y + depthOffset);
+    }
+    graphics.strokePath();
+
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x + depthOffset, rightWallPoints[0].y + depthOffset);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x + depthOffset, rightWallPoints[i].y + depthOffset);
+    }
+    graphics.strokePath();
+
+    // 2. 绘制城墙侧面（中间层，深绿色）
+    graphics.lineStyle(width, COLORS.WALL_SIDE, 1);
+    graphics.beginPath();
+    graphics.moveTo(leftWallPoints[0].x + depthOffset/2, leftWallPoints[0].y + depthOffset/2);
+    for (let i = 1; i < leftWallPoints.length; i++) {
+      graphics.lineTo(leftWallPoints[i].x + depthOffset/2, leftWallPoints[i].y + depthOffset/2);
+    }
+    graphics.strokePath();
+
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x + depthOffset/2, rightWallPoints[0].y + depthOffset/2);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x + depthOffset/2, rightWallPoints[i].y + depthOffset/2);
+    }
+    graphics.strokePath();
+
+    // 3. 绘制城墙顶部（最上层，亮绿色）
     graphics.lineStyle(width, COLORS.WALL, 1);
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x, leftWallPoints[0].y);
@@ -164,7 +189,6 @@ export class GameScene extends Phaser.Scene {
     }
     graphics.strokePath();
 
-    // 绘制右侧城墙
     graphics.beginPath();
     graphics.moveTo(rightWallPoints[0].x, rightWallPoints[0].y);
     for (let i = 1; i < rightWallPoints.length; i++) {
@@ -172,7 +196,22 @@ export class GameScene extends Phaser.Scene {
     }
     graphics.strokePath();
 
-    // 在每个路径点处绘制圆形以平滑连接
+    // 4. 在每个路径点处绘制圆形以平滑连接（三层）
+    // 阴影层
+    graphics.fillStyle(COLORS.WALL_DARK, 0.6);
+    for (let i = 0; i < path.length; i++) {
+      graphics.fillCircle(leftWallPoints[i].x + depthOffset, leftWallPoints[i].y + depthOffset, width / 2);
+      graphics.fillCircle(rightWallPoints[i].x + depthOffset, rightWallPoints[i].y + depthOffset, width / 2);
+    }
+
+    // 侧面层
+    graphics.fillStyle(COLORS.WALL_SIDE, 1);
+    for (let i = 0; i < path.length; i++) {
+      graphics.fillCircle(leftWallPoints[i].x + depthOffset/2, leftWallPoints[i].y + depthOffset/2, width / 2);
+      graphics.fillCircle(rightWallPoints[i].x + depthOffset/2, rightWallPoints[i].y + depthOffset/2, width / 2);
+    }
+
+    // 顶部层
     graphics.fillStyle(COLORS.WALL, 1);
     for (let i = 0; i < path.length; i++) {
       graphics.fillCircle(leftWallPoints[i].x, leftWallPoints[i].y, width / 2);

@@ -6,11 +6,12 @@ export const GAME_HEIGHT = 800;
 
 // 游戏颜色 - 参考1.png图片配色
 export const COLORS = {
-  BACKGROUND: 0x9DC183,      // 浅黄绿色草地（参考1.png）
-  GROUND: 0x4A5F4E,          // 深绿色地面
-  PATH: 0xD4B896,            // 浅棕色沙土路径（参考1.png）
-  WALL: 0x6B9BD1,            // 蓝灰色城墙（参考1.png）
-  WALL_DARK: 0x5A8AC0,       // 深蓝灰色城墙阴影
+  BACKGROUND: 0x4A5A4A,      // 深绿色地面（参考1.png的深色）
+  GROUND: 0x4A5A4A,          // 深绿色地面
+  PATH: 0x4A5A4A,            // 路径就是地面颜色
+  WALL: 0x7CB342,            // 绿色城墙顶部（参考1.png的绿色）
+  WALL_SIDE: 0x5D8C2E,       // 城墙侧面（深绿，立体感）
+  WALL_DARK: 0x4A7023,       // 城墙阴影（更深的绿）
   SCENE: 0x00CED1,
   ENEMY_NORMAL: 0xE74C3C,    // 红色敌人
   ENEMY_ELITE: 0xF39C12,     // 橙色精英
@@ -21,8 +22,8 @@ export const COLORS = {
   TOWER_ARROW: 0xD5D5D5,     // 浅灰色箭塔
   TOWER_SLOW: 0x5DADE2,      // 蓝色减速塔
   TOWER_AOE: 0xE74C3C,       // 红色范围塔
-  SLOT: 0x8BB8D8,            // 槽位颜色（在城墙上）
-  SLOT_HOVER: 0xA5C9E3,      // 槽位悬停
+  SLOT: 0x9ED670,            // 槽位颜色（浅绿，在城墙上）
+  SLOT_HOVER: 0xB5E48C,      // 槽位悬停
 };
 
 // 敌人配置
