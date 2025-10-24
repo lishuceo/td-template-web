@@ -103,27 +103,38 @@ export class GameScene extends Phaser.Scene {
       let perpY = 0;
 
       if (prev && next) {
-        // 中间点：计算两段路径的平均垂直向量
+        // 中间点：使用角平分线方向，并根据转角角度调整距离
         const dx1 = curr.x - prev.x;
         const dy1 = curr.y - prev.y;
         const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-        const perp1X = (-dy1 / len1);
-        const perp1Y = (dx1 / len1);
+        const dir1X = dx1 / len1;
+        const dir1Y = dy1 / len1;
 
         const dx2 = next.x - curr.x;
         const dy2 = next.y - curr.y;
         const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-        const perp2X = (-dy2 / len2);
-        const perp2Y = (dx2 / len2);
+        const dir2X = dx2 / len2;
+        const dir2Y = dy2 / len2;
 
-        // 平均两个垂直向量
-        perpX = ((perp1X + perp2X) / 2);
-        perpY = ((perp1Y + perp2Y) / 2);
+        // 计算角平分线方向（两个方向向量的平均）
+        const bisectX = dir1X + dir2X;
+        const bisectY = dir1Y + dir2Y;
+        const bisectLen = Math.sqrt(bisectX * bisectX + bisectY * bisectY);
 
-        // 归一化
-        const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
-        perpX = (perpX / perpLen) * offset;
-        perpY = (perpY / perpLen) * offset;
+        // 角平分线的垂直方向
+        const bisectNormX = -bisectY / bisectLen;
+        const bisectNormY = bisectX / bisectLen;
+
+        // 计算转角的夹角余弦值
+        const cosAngle = dir1X * dir2X + dir1Y * dir2Y;
+        const sinHalfAngle = Math.sqrt((1 - cosAngle) / 2);
+
+        // 根据转角调整offset，保持恒定宽度
+        // 当转角越尖锐，需要的offset越大
+        const adjustedOffset = sinHalfAngle > 0.1 ? offset / sinHalfAngle : offset;
+
+        perpX = bisectNormX * adjustedOffset;
+        perpY = bisectNormY * adjustedOffset;
       } else if (next) {
         // 起点
         const dx = next.x - curr.x;
