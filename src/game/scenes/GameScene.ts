@@ -151,7 +151,7 @@ export class GameScene extends Phaser.Scene {
 
     // 绘制左侧城墙（三层：阴影、侧面、顶部）
     // 左墙阴影
-    graphics.lineStyle(wallWidth + 2, 0x000000, 0.3);
+    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6);
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x + shadowOffsetX, leftWallPoints[0].y + shadowOffsetY);
     for (let i = 1; i < leftWallPoints.length; i++) {
@@ -179,7 +179,7 @@ export class GameScene extends Phaser.Scene {
 
     // 绘制右侧城墙（三层：阴影、侧面、顶部）
     // 右墙阴影
-    graphics.lineStyle(wallWidth + 2, 0x000000, 0.3);
+    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6);
     graphics.beginPath();
     graphics.moveTo(rightWallPoints[0].x + shadowOffsetX, rightWallPoints[0].y + shadowOffsetY);
     for (let i = 1; i < rightWallPoints.length; i++) {
