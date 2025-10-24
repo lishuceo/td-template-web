@@ -39,6 +39,77 @@ jobs:
             echo "❌ Some checks failed. Please review the errors above."
           fi
 
+      - name: Create issue on lint/typecheck failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = `🔴 Lint/TypeCheck Failed${prNumber ? ` - PR #${prNumber}` : ` - ${branch}`}`;
+            const body = `## Lint 或 TypeCheck 失败
+
+**分支:** \`${branch}\`
+**提交:** \`${sha}\`
+**Workflow:** ${workflow}
+**Job:** Lint and Type Check
+
+### 🔍 查看详情
+
+**Workflow运行日志:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}
+
+### 🛠️ 可能的原因
+
+- **ESLint错误**: 代码风格或质量问题
+  - 未使用的变量
+  - 缺少类型定义
+  - 不符合代码规范
+
+- **TypeScript错误**: 类型检查失败
+  - 类型不匹配
+  - 缺少类型定义
+  - 导入错误
+
+### ✅ 修复步骤
+
+1. 查看workflow日志，找到具体的错误信息
+2. 本地运行以下命令复现问题：
+   \`\`\`bash
+   npm run lint        # 检查 ESLint 错误
+   npm run build       # 检查 TypeScript 错误
+   \`\`\`
+3. 根据错误信息修复代码
+4. 确保本地构建通过后再提交
+
+### 💡 常见修复方法
+
+**ESLint 错误:**
+\`\`\`bash
+# 自动修复部分问题
+npm run lint -- --fix
+\`\`\`
+
+**TypeScript 错误:**
+- 添加缺失的类型定义
+- 修复类型不匹配
+- 移除未使用的导入
+
+---
+
+*由 CI workflow 自动生成*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'lint', 'auto-generated']
+            });
+
   build:
     name: Build
     runs-on: ubuntu-latest
