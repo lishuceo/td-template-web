@@ -6,23 +6,23 @@ export const GAME_HEIGHT = 800;
 
 // 游戏颜色 - 参考图片配色
 export const COLORS = {
-  BACKGROUND: 0x6B8E6F,      // 绿色草地背景
+  BACKGROUND: 0x87A96B,      // 浅绿色草地背景（更接近参考图）
   GROUND: 0x4A5F4E,          // 深绿色地面
-  PATH: 0x8B7355,            // 棕色路径（地面道路）
-  WALL: 0x5B9BD5,            // 蓝色城墙（高地）
-  WALL_DARK: 0x4A7FB8,       // 深蓝色城墙阴影
+  PATH: 0xC4A57B,            // 浅棕/沙色路径（地面道路）
+  WALL: 0x7FB3D5,            // 浅蓝色城墙（高地）
+  WALL_DARK: 0x6495B8,       // 深蓝色城墙阴影
   SCENE: 0x00CED1,
-  ENEMY_NORMAL: 0xFF6B6B,    // 红色敌人
-  ENEMY_ELITE: 0xFFB347,     // 橙色精英
+  ENEMY_NORMAL: 0xE74C3C,    // 红色敌人
+  ENEMY_ELITE: 0xF39C12,     // 橙色精英
   ENEMY_BOSS: 0xFF4500,
   GOLD: 0xFFD700,
-  BASE: 0x4CAF50,            // 绿色基地
-  DANGER: 0xFF6B6B,
-  TOWER_ARROW: 0xEEEEEE,     // 浅灰白色箭塔
-  TOWER_SLOW: 0x64B5F6,      // 蓝色减速塔
-  TOWER_AOE: 0xEF5350,       // 红色范围塔
-  SLOT: 0x7BA3CC,            // 槽位颜色（在城墙上）
-  SLOT_HOVER: 0x9AC5E8,
+  BASE: 0x52B788,            // 绿色基地
+  DANGER: 0xE74C3C,
+  TOWER_ARROW: 0xD5D5D5,     // 浅灰色箭塔
+  TOWER_SLOW: 0x5DADE2,      // 蓝色减速塔
+  TOWER_AOE: 0xE74C3C,       // 红色范围塔
+  SLOT: 0x99C4DD,            // 槽位颜色（浅蓝，在城墙上）
+  SLOT_HOVER: 0xB8DAED,      // 槽位悬停
 };
 
 // 敌人配置
