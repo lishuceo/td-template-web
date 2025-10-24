@@ -145,48 +145,65 @@ export class GameScene extends Phaser.Scene {
       rightWallPoints.push({ x: curr.x - perpX, y: curr.y - perpY });
     }
 
-    // 长阴影偏移（向右下方）
+    const wallWidth = 35;
     const shadowOffsetX = 12;
     const shadowOffsetY = 12;
 
-    // 1. 绘制长阴影（最底层）
-    graphics.fillStyle(0x000000, 0.3);
+    // 绘制左侧城墙（三层：阴影、侧面、顶部）
+    // 左墙阴影
+    graphics.lineStyle(wallWidth + 2, 0x000000, 0.3);
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x + shadowOffsetX, leftWallPoints[0].y + shadowOffsetY);
     for (let i = 1; i < leftWallPoints.length; i++) {
       graphics.lineTo(leftWallPoints[i].x + shadowOffsetX, leftWallPoints[i].y + shadowOffsetY);
     }
-    for (let i = rightWallPoints.length - 1; i >= 0; i--) {
-      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX, rightWallPoints[i].y + shadowOffsetY);
-    }
-    graphics.closePath();
-    graphics.fillPath();
+    graphics.strokePath();
 
-    // 2. 绘制城墙侧面（深绿色，立体感）
-    graphics.fillStyle(COLORS.WALL_SIDE, 1);
+    // 左墙侧面
+    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1);
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x + shadowOffsetX/2, leftWallPoints[0].y + shadowOffsetY/2);
     for (let i = 1; i < leftWallPoints.length; i++) {
       graphics.lineTo(leftWallPoints[i].x + shadowOffsetX/2, leftWallPoints[i].y + shadowOffsetY/2);
     }
-    for (let i = rightWallPoints.length - 1; i >= 0; i--) {
-      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX/2, rightWallPoints[i].y + shadowOffsetY/2);
-    }
-    graphics.closePath();
-    graphics.fillPath();
+    graphics.strokePath();
 
-    // 3. 绘制城墙顶部（亮绿色）
-    graphics.fillStyle(COLORS.WALL, 1);
+    // 左墙顶部
+    graphics.lineStyle(wallWidth, COLORS.WALL, 1);
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x, leftWallPoints[0].y);
     for (let i = 1; i < leftWallPoints.length; i++) {
       graphics.lineTo(leftWallPoints[i].x, leftWallPoints[i].y);
     }
-    for (let i = rightWallPoints.length - 1; i >= 0; i--) {
+    graphics.strokePath();
+
+    // 绘制右侧城墙（三层：阴影、侧面、顶部）
+    // 右墙阴影
+    graphics.lineStyle(wallWidth + 2, 0x000000, 0.3);
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x + shadowOffsetX, rightWallPoints[0].y + shadowOffsetY);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX, rightWallPoints[i].y + shadowOffsetY);
+    }
+    graphics.strokePath();
+
+    // 右墙侧面
+    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1);
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x + shadowOffsetX/2, rightWallPoints[0].y + shadowOffsetY/2);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX/2, rightWallPoints[i].y + shadowOffsetY/2);
+    }
+    graphics.strokePath();
+
+    // 右墙顶部
+    graphics.lineStyle(wallWidth, COLORS.WALL, 1);
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x, rightWallPoints[0].y);
+    for (let i = 1; i < rightWallPoints.length; i++) {
       graphics.lineTo(rightWallPoints[i].x, rightWallPoints[i].y);
     }
-    graphics.closePath();
-    graphics.fillPath();
+    graphics.strokePath();
   }
 
   private drawStartPoint(point: { x: number; y: number }): void {
