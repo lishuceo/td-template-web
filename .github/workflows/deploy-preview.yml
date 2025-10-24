@@ -83,45 +83,32 @@ jobs:
             const actor = context.actor;
             const sha = context.sha.substring(0, 7);
 
-            const title = `🔴 Deploy Preview Failed - PR #${prNumber}`;
-            const body = `## Deploy Preview 构建失败
-
-**PR:** #${prNumber}
-**分支:** \`${branch}\`
-**提交:** \`${sha}\`
-**触发者:** @${actor}
-**Workflow:** ${workflow}
-**Run #:** ${runNumber}
-
-### 📋 错误信息
-
-Deploy Preview workflow 执行失败。
-
-### 🔍 查看详情
-
-**Workflow运行日志:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}
-
-### 🛠️ 可能的原因
-
-- TypeScript 编译错误
-- 构建失败
-- 依赖问题
-- 环境配置问题
-
-### ✅ 修复步骤
-
-1. 查看上面的workflow日志链接，找到具体错误
-2. 本地运行 \`npm run build\` 复现问题
-3. 修复错误后提交新的commit
-4. PR会自动重新触发构建
-
-### 🤖 自动化
-
-这个issue由GitHub Actions自动创建，用于跟踪构建失败。
-
----
-
-*由 Deploy Preview workflow 自动生成*`;
+            const title = '🔴 Deploy Preview Failed - PR #' + prNumber;
+            const body = '## Deploy Preview 构建失败\n\n' +
+              '**PR:** #' + prNumber + '\n' +
+              '**分支:** ' + branch + '\n' +
+              '**提交:** ' + sha + '\n' +
+              '**触发者:** @' + actor + '\n' +
+              '**Workflow:** ' + workflow + '\n' +
+              '**Run #:** ' + runNumber + '\n\n' +
+              '### 📋 错误信息\n\n' +
+              'Deploy Preview workflow 执行失败。\n\n' +
+              '### 🔍 查看详情\n\n' +
+              '**Workflow运行日志:** https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + runId + '\n\n' +
+              '### 🛠️ 可能的原因\n\n' +
+              '- TypeScript 编译错误\n' +
+              '- 构建失败\n' +
+              '- 依赖问题\n' +
+              '- 环境配置问题\n\n' +
+              '### ✅ 修复步骤\n\n' +
+              '1. 查看上面的workflow日志链接，找到具体错误\n' +
+              '2. 本地运行 `npm run build` 复现问题\n' +
+              '3. 修复错误后提交新的commit\n' +
+              '4. PR会自动重新触发构建\n\n' +
+              '### 🤖 自动化\n\n' +
+              '这个issue由GitHub Actions自动创建，用于跟踪构建失败。\n\n' +
+              '---\n\n' +
+              '*由 Deploy Preview workflow 自动生成*';
 
             await github.rest.issues.create({
               owner: context.repo.owner,
