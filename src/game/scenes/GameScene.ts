@@ -65,21 +65,16 @@ export class GameScene extends Phaser.Scene {
 
   private drawPath(): void {
     this.pathGraphics = this.add.graphics();
-
-    // 绘制路径（带阴影效果）
     const path = this.levelConfig.path;
+    const pathWidth = 50;
+    const wallWidth = 35;
+    const wallOffset = pathWidth / 2 + wallWidth / 2;
 
-    // 阴影（增加阴影长度）
-    this.pathGraphics.lineStyle(35, 0x000000, 0.3);
-    this.pathGraphics.beginPath();
-    this.pathGraphics.moveTo(path[0].x + 12, path[0].y + 12);
-    for (let i = 1; i < path.length; i++) {
-      this.pathGraphics.lineTo(path[i].x + 12, path[i].y + 12);
-    }
-    this.pathGraphics.strokePath();
+    // 1. 绘制城墙（蓝色高地）- 在路径两侧
+    this.drawWalls(path, wallOffset, wallWidth);
 
-    // 路径主体
-    this.pathGraphics.lineStyle(30, COLORS.PATH);
+    // 2. 绘制路径（棕色地面道路）
+    this.pathGraphics.lineStyle(pathWidth, COLORS.PATH);
     this.pathGraphics.beginPath();
     this.pathGraphics.moveTo(path[0].x, path[0].y);
     for (let i = 1; i < path.length; i++) {
@@ -90,6 +85,74 @@ export class GameScene extends Phaser.Scene {
     // 绘制起点和终点标记
     this.drawStartPoint(path[0]);
     this.drawEndPoint(path[path.length - 1]);
+  }
+
+  private drawWalls(path: { x: number; y: number }[], offset: number, width: number): void {
+    const graphics = this.add.graphics();
+
+    // 绘制路径两侧的城墙
+    for (let i = 0; i < path.length - 1; i++) {
+      const p1 = path[i];
+      const p2 = path[i + 1];
+
+      // 计算路径方向的垂直向量
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const perpX = (-dy / len) * offset;
+      const perpY = (dx / len) * offset;
+
+      // 城墙阴影（深色）
+      graphics.lineStyle(width + 4, COLORS.WALL_DARK, 0.6);
+      graphics.beginPath();
+      graphics.moveTo(p1.x + perpX + 3, p1.y + perpY + 3);
+      graphics.lineTo(p2.x + perpX + 3, p2.y + perpY + 3);
+      graphics.strokePath();
+
+      graphics.beginPath();
+      graphics.moveTo(p1.x - perpX + 3, p1.y - perpY + 3);
+      graphics.lineTo(p2.x - perpX + 3, p2.y - perpY + 3);
+      graphics.strokePath();
+
+      // 城墙主体（蓝色）
+      graphics.lineStyle(width, COLORS.WALL);
+      graphics.beginPath();
+      graphics.moveTo(p1.x + perpX, p1.y + perpY);
+      graphics.lineTo(p2.x + perpX, p2.y + perpY);
+      graphics.strokePath();
+
+      graphics.beginPath();
+      graphics.moveTo(p1.x - perpX, p1.y - perpY);
+      graphics.lineTo(p2.x - perpX, p2.y - perpY);
+      graphics.strokePath();
+    }
+
+    // 在转角处绘制圆角连接
+    this.drawWallCorners(path, offset, width, graphics);
+  }
+
+  private drawWallCorners(path: { x: number; y: number }[], offset: number, width: number, graphics: Phaser.GameObjects.Graphics): void {
+    for (let i = 1; i < path.length - 1; i++) {
+      const p0 = path[i - 1];
+      const p1 = path[i];
+
+      // 计算第一段路径的垂直向量
+      const dx1 = p1.x - p0.x;
+      const dy1 = p1.y - p0.y;
+      const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+      const perp1X = (-dy1 / len1) * offset;
+      const perp1Y = (dx1 / len1) * offset;
+
+      // 绘制转角圆形（两侧）- 阴影
+      graphics.fillStyle(COLORS.WALL_DARK, 0.6);
+      graphics.fillCircle(p1.x + perp1X + 3, p1.y + perp1Y + 3, width / 2);
+      graphics.fillCircle(p1.x - perp1X + 3, p1.y - perp1Y + 3, width / 2);
+
+      // 转角主体
+      graphics.fillStyle(COLORS.WALL, 1);
+      graphics.fillCircle(p1.x + perp1X, p1.y + perp1Y, width / 2);
+      graphics.fillCircle(p1.x - perp1X, p1.y - perp1Y, width / 2);
+    }
   }
 
   private drawStartPoint(point: { x: number; y: number }): void {

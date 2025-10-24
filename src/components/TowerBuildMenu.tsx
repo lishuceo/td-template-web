@@ -31,26 +31,27 @@ export default function TowerBuildMenu({
   const getTowerColor = (type: TowerType): string => {
     switch (type) {
       case 'arrow':
-        return 'bg-white';
+        return 'bg-gray-200';  // 浅灰色箭塔
       case 'slow':
-        return 'bg-blue-400';
+        return 'bg-blue-400';  // 蓝色减速塔
       case 'aoe':
-        return 'bg-red-500';
+        return 'bg-red-400';   // 红色范围塔
     }
   };
 
   // Calculate menu position to keep it on screen
   const menuStyle = useMemo(() => {
-    const menuWidth = 200;
-    const menuHeight = 200;
+    const menuWidth = 180;
+    const menuHeight = 180;
     const padding = 20;
+    const offset = 10; // Much closer to the slot
 
-    let left = x + 60; // Position to the right of slot
+    let left = x + offset; // Position very close to the right of slot
     let top = y - menuHeight / 2; // Center vertically
 
     // Keep menu on screen
     if (left + menuWidth > window.innerWidth - padding) {
-      left = x - menuWidth - 60; // Position to the left instead
+      left = x - menuWidth - offset; // Position to the left instead
     }
     if (top < padding) {
       top = padding;
