@@ -18,7 +18,9 @@
       "Bash(if not exist docs mkdir docs)",
       "Bash(npm run dev:*)",
       "Bash(npm install:*)",
-      "Bash(npm run test:run:*)"
+      "Bash(npm run test:run:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": [],
     "ask": []

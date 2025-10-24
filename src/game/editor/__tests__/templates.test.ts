@@ -113,13 +113,11 @@ describe('Level Templates', () => {
     });
 
     it('路径应该最长', () => {
-      const straightConfig = templates.simpleStraight(1);
-      const lConfig = templates.lShape(2);
-      const sConfig = templates.sShape(3);
-      const circularConfig = templates.circular(4);
+      const sShape = templates.sShape(3);
+      const circular = templates.circular(4);
 
-      expect(circularConfig.path.points.length).toBeGreaterThanOrEqual(
-        sConfig.path.points.length
+      expect(circular.path.points.length).toBeGreaterThanOrEqual(
+        sShape.path.points.length
       );
     });
 
@@ -155,28 +153,28 @@ describe('Level Templates', () => {
     });
 
     it('难度应该递增', () => {
-      const straightConfig = templates.simpleStraight(1);
-      const lConfig = templates.lShape(2);
-      const sConfig = templates.sShape(3);
-      const circularConfig = templates.circular(4);
+      const straight = templates.simpleStraight(1);
+      const lShape = templates.lShape(2);
+      const sShape = templates.sShape(3);
+      const circular = templates.circular(4);
 
       // 路径复杂度递增
-      expect(lConfig.path.points.length).toBeGreaterThanOrEqual(
-        straightConfig.path.points.length
+      expect(lShape.path.points.length).toBeGreaterThanOrEqual(
+        straight.path.points.length
       );
-      expect(sConfig.path.points.length).toBeGreaterThanOrEqual(
-        lConfig.path.points.length
+      expect(sShape.path.points.length).toBeGreaterThanOrEqual(
+        lShape.path.points.length
       );
-      expect(circularConfig.path.points.length).toBeGreaterThanOrEqual(
-        sConfig.path.points.length
+      expect(circular.path.points.length).toBeGreaterThanOrEqual(
+        sShape.path.points.length
       );
 
       // 波次数量递增
-      expect(sConfig.waves.length).toBeGreaterThanOrEqual(
-        straightConfig.waves.length
+      expect(sShape.waves.length).toBeGreaterThanOrEqual(
+        straight.waves.length
       );
-      expect(circularConfig.waves.length).toBeGreaterThanOrEqual(
-        sConfig.waves.length
+      expect(circular.waves.length).toBeGreaterThanOrEqual(
+        sShape.waves.length
       );
     });
 

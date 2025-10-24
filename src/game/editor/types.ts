@@ -7,7 +7,7 @@
  * 3. 易于AI理解和生成
  */
 
-import type { PathPoint, LevelConfig, WaveConfig } from '@/types/game';
+import type { PathPoint, WaveConfig } from '@/types/game';
 
 /**
  * AI友好的路径描述
