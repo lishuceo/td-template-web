@@ -11,7 +11,6 @@ export class GameScene extends Phaser.Scene {
   private waveManager!: WaveManager;
   private towerManager!: TowerManager;
   private base!: Base;
-  private pathGraphics!: Phaser.GameObjects.Graphics;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -64,32 +63,147 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawPath(): void {
-    this.pathGraphics = this.add.graphics();
-
-    // 绘制路径（带阴影效果）
     const path = this.levelConfig.path;
+    const pathWidth = 50;
+    const wallWidth = 40;
+    const wallOffset = pathWidth / 2 + wallWidth / 2;
 
-    // 阴影（增加阴影长度）
-    this.pathGraphics.lineStyle(35, 0x000000, 0.3);
-    this.pathGraphics.beginPath();
-    this.pathGraphics.moveTo(path[0].x + 12, path[0].y + 12);
-    for (let i = 1; i < path.length; i++) {
-      this.pathGraphics.lineTo(path[i].x + 12, path[i].y + 12);
-    }
-    this.pathGraphics.strokePath();
-
-    // 路径主体
-    this.pathGraphics.lineStyle(30, COLORS.PATH);
-    this.pathGraphics.beginPath();
-    this.pathGraphics.moveTo(path[0].x, path[0].y);
-    for (let i = 1; i < path.length; i++) {
-      this.pathGraphics.lineTo(path[i].x, path[i].y);
-    }
-    this.pathGraphics.strokePath();
+    // 绘制城墙（绿色高地，带立体感）- 在路径两侧
+    // 路径本身不需要绘制，它只是被城墙围起来的地面
+    this.drawWalls(path, wallOffset);
 
     // 绘制起点和终点标记
     this.drawStartPoint(path[0]);
     this.drawEndPoint(path[path.length - 1]);
+  }
+
+  private drawWalls(path: { x: number; y: number }[], offset: number): void {
+    const graphics = this.add.graphics();
+
+    // 计算每个路径点的垂直向量（左侧墙点和右侧墙点）
+    const leftWallPoints: { x: number; y: number }[] = [];
+    const rightWallPoints: { x: number; y: number }[] = [];
+
+    for (let i = 0; i < path.length; i++) {
+      const curr = path[i];
+      const prev = i > 0 ? path[i - 1] : null;
+      const next = i < path.length - 1 ? path[i + 1] : null;
+
+      let perpX = 0;
+      let perpY = 0;
+
+      if (prev && next) {
+        // 中间点：使用角平分线方向，并根据转角角度调整距离
+        const dx1 = curr.x - prev.x;
+        const dy1 = curr.y - prev.y;
+        const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+        const dir1X = dx1 / len1;
+        const dir1Y = dy1 / len1;
+
+        const dx2 = next.x - curr.x;
+        const dy2 = next.y - curr.y;
+        const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        const dir2X = dx2 / len2;
+        const dir2Y = dy2 / len2;
+
+        // 计算角平分线方向（两个方向向量的平均）
+        const bisectX = dir1X + dir2X;
+        const bisectY = dir1Y + dir2Y;
+        const bisectLen = Math.sqrt(bisectX * bisectX + bisectY * bisectY);
+
+        // 角平分线的垂直方向
+        const bisectNormX = -bisectY / bisectLen;
+        const bisectNormY = bisectX / bisectLen;
+
+        // 计算转角的夹角余弦值
+        const cosAngle = dir1X * dir2X + dir1Y * dir2Y;
+        const sinHalfAngle = Math.sqrt((1 - cosAngle) / 2);
+
+        // 根据转角调整offset，保持恒定宽度
+        // 当转角越尖锐，需要的offset越大
+        const adjustedOffset = sinHalfAngle > 0.1 ? offset / sinHalfAngle : offset;
+
+        perpX = bisectNormX * adjustedOffset;
+        perpY = bisectNormY * adjustedOffset;
+      } else if (next) {
+        // 起点
+        const dx = next.x - curr.x;
+        const dy = next.y - curr.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        perpX = (-dy / len) * offset;
+        perpY = (dx / len) * offset;
+      } else if (prev) {
+        // 终点
+        const dx = curr.x - prev.x;
+        const dy = curr.y - prev.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        perpX = (-dy / len) * offset;
+        perpY = (dx / len) * offset;
+      }
+
+      leftWallPoints.push({ x: curr.x + perpX, y: curr.y + perpY });
+      rightWallPoints.push({ x: curr.x - perpX, y: curr.y - perpY });
+    }
+
+    const wallWidth = 35;
+    const shadowOffsetX = 12;
+    const shadowOffsetY = 12;
+
+    // 绘制左侧城墙（三层：阴影、侧面、顶部）
+    // 左墙阴影
+    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6);
+    graphics.beginPath();
+    graphics.moveTo(leftWallPoints[0].x + shadowOffsetX, leftWallPoints[0].y + shadowOffsetY);
+    for (let i = 1; i < leftWallPoints.length; i++) {
+      graphics.lineTo(leftWallPoints[i].x + shadowOffsetX, leftWallPoints[i].y + shadowOffsetY);
+    }
+    graphics.strokePath();
+
+    // 左墙侧面
+    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1);
+    graphics.beginPath();
+    graphics.moveTo(leftWallPoints[0].x + shadowOffsetX/2, leftWallPoints[0].y + shadowOffsetY/2);
+    for (let i = 1; i < leftWallPoints.length; i++) {
+      graphics.lineTo(leftWallPoints[i].x + shadowOffsetX/2, leftWallPoints[i].y + shadowOffsetY/2);
+    }
+    graphics.strokePath();
+
+    // 左墙顶部
+    graphics.lineStyle(wallWidth, COLORS.WALL, 1);
+    graphics.beginPath();
+    graphics.moveTo(leftWallPoints[0].x, leftWallPoints[0].y);
+    for (let i = 1; i < leftWallPoints.length; i++) {
+      graphics.lineTo(leftWallPoints[i].x, leftWallPoints[i].y);
+    }
+    graphics.strokePath();
+
+    // 绘制右侧城墙（三层：阴影、侧面、顶部）
+    // 右墙阴影
+    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6);
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x + shadowOffsetX, rightWallPoints[0].y + shadowOffsetY);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX, rightWallPoints[i].y + shadowOffsetY);
+    }
+    graphics.strokePath();
+
+    // 右墙侧面
+    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1);
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x + shadowOffsetX/2, rightWallPoints[0].y + shadowOffsetY/2);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x + shadowOffsetX/2, rightWallPoints[i].y + shadowOffsetY/2);
+    }
+    graphics.strokePath();
+
+    // 右墙顶部
+    graphics.lineStyle(wallWidth, COLORS.WALL, 1);
+    graphics.beginPath();
+    graphics.moveTo(rightWallPoints[0].x, rightWallPoints[0].y);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x, rightWallPoints[i].y);
+    }
+    graphics.strokePath();
   }
 
   private drawStartPoint(point: { x: number; y: number }): void {

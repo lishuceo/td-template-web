@@ -6,6 +6,11 @@ on:
   push:
     branches: ['main', 'develop']
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   lint-and-typecheck:
     name: Lint and Type Check
@@ -39,6 +44,53 @@ jobs:
             echo "❌ Some checks failed. Please review the errors above."
           fi
 
+      - name: Create issue on lint/typecheck failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = '🔴 Lint/TypeCheck Failed' + (prNumber ? ' - PR #' + prNumber : ' - ' + branch);
+            const body = '## Lint 或 TypeCheck 失败\n\n' +
+              '**分支:** ' + branch + '\n' +
+              '**提交:** ' + sha + '\n' +
+              '**Workflow:** ' + workflow + '\n' +
+              '**Job:** Lint and Type Check\n\n' +
+              '### 🔍 查看详情\n\n' +
+              '**Workflow运行日志:** https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + runId + '\n\n' +
+              '### 🛠️ 可能的原因\n\n' +
+              '- **ESLint错误**: 代码风格或质量问题\n' +
+              '  - 未使用的变量\n' +
+              '  - 缺少类型定义\n' +
+              '  - 不符合代码规范\n\n' +
+              '- **TypeScript错误**: 类型检查失败\n' +
+              '  - 类型不匹配\n' +
+              '  - 缺少类型定义\n' +
+              '  - 导入错误\n\n' +
+              '### ✅ 修复步骤\n\n' +
+              '1. 查看workflow日志，找到具体的错误信息\n' +
+              '2. 本地运行 `npm run lint` 和 `npm run build` 复现问题\n' +
+              '3. 根据错误信息修复代码\n' +
+              '4. 确保本地构建通过后再提交\n\n' +
+              '### 💡 常见修复方法\n\n' +
+              '**ESLint:** 运行 `npm run lint -- --fix` 自动修复\n\n' +
+              '**TypeScript:** 添加类型定义、修复类型不匹配、移除未使用的导入\n\n' +
+              '---\n\n' +
+              '*由 CI workflow 自动生成*';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'lint', 'auto-generated']
+            });
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -67,24 +119,100 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # Optional: Add test job when tests are implemented
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   needs: lint-and-typecheck
-  #
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '18'
-  #         cache: 'npm'
-  #
-  #     - name: Install dependencies
-  #       run: npm ci
-  #
-  #     - name: Run tests
-  #       run: npm test
+      - name: Create issue on build failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = '🔴 CI Build Failed' + (prNumber ? ' - PR #' + prNumber : ' - ' + branch);
+            const body = '## CI 构建失败\n\n' +
+              '**分支:** ' + branch + '\n' +
+              '**提交:** ' + sha + '\n' +
+              '**Workflow:** ' + workflow + '\n' +
+              '**Job:** Build\n\n' +
+              '### 🔍 查看详情\n\n' +
+              '**Workflow运行日志:** https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + runId + '\n\n' +
+              '### 🛠️ 可能的原因\n\n' +
+              '- TypeScript 编译错误\n' +
+              '- Vite 构建失败\n' +
+              '- 依赖版本冲突\n\n' +
+              '### ✅ 修复步骤\n\n' +
+              '1. 查看workflow日志获取具体错误信息\n' +
+              '2. 本地运行 `npm run build` 复现问题\n' +
+              '3. 修复错误并提交\n\n' +
+              '---\n\n' +
+              '*由 CI workflow 自动生成*';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'auto-generated']
+            });
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Create issue on test failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = '🔴 Tests Failed' + (prNumber ? ' - PR #' + prNumber : ' - ' + branch);
+            const body = '## 测试失败\n\n' +
+              '**分支:** ' + branch + '\n' +
+              '**提交:** ' + sha + '\n' +
+              '**Workflow:** ' + workflow + '\n' +
+              '**Job:** Test\n\n' +
+              '### 🔍 查看详情\n\n' +
+              '**Workflow运行日志:** https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + runId + '\n\n' +
+              '### 🛠️ 可能的原因\n\n' +
+              '- 测试用例失败\n' +
+              '- 新代码破坏了现有功能\n' +
+              '- 测试环境问题\n\n' +
+              '### ✅ 修复步骤\n\n' +
+              '1. 查看workflow日志获取失败的测试\n' +
+              '2. 本地运行 `npm test` 复现问题\n' +
+              '3. 修复失败的测试\n' +
+              '4. 确保所有测试通过后再提交\n\n' +
+              '---\n\n' +
+              '*由 CI workflow 自动生成*';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'tests', 'auto-generated']
+            });

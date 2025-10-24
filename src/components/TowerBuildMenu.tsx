@@ -31,26 +31,41 @@ export default function TowerBuildMenu({
   const getTowerColor = (type: TowerType): string => {
     switch (type) {
       case 'arrow':
-        return 'bg-white';
+        return 'bg-gray-200';  // 浅灰色箭塔
       case 'slow':
-        return 'bg-blue-400';
+        return 'bg-blue-400';  // 蓝色减速塔
       case 'aoe':
-        return 'bg-red-500';
+        return 'bg-red-400';   // 红色范围塔
     }
   };
 
-  // Calculate menu position to keep it on screen
+  // Calculate menu position - x,y are game canvas coordinates
   const menuStyle = useMemo(() => {
-    const menuWidth = 200;
-    const menuHeight = 200;
-    const padding = 20;
+    // Find the game canvas element to get its position and scale
+    const canvas = document.querySelector('.game-canvas canvas') as HTMLCanvasElement;
+    if (!canvas) {
+      return { left: x, top: y }; // Fallback
+    }
 
-    let left = x + 60; // Position to the right of slot
-    let top = y - menuHeight / 2; // Center vertically
+    const canvasRect = canvas.getBoundingClientRect();
+    const scaleX = canvasRect.width / 1200; // GAME_WIDTH
+    const scaleY = canvasRect.height / 800; // GAME_HEIGHT
+
+    // Convert game coordinates to screen coordinates
+    const screenX = canvasRect.left + x * scaleX;
+    const screenY = canvasRect.top + y * scaleY;
+
+    const menuWidth = 160;
+    const menuHeight = 140;
+    const offset = 30; // Offset from slot center
+
+    let left = screenX + offset;
+    let top = screenY - menuHeight / 2;
 
     // Keep menu on screen
+    const padding = 10;
     if (left + menuWidth > window.innerWidth - padding) {
-      left = x - menuWidth - 60; // Position to the left instead
+      left = screenX - menuWidth - offset;
     }
     if (top < padding) {
       top = padding;

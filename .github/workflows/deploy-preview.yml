@@ -5,6 +5,11 @@ on:
     branches: ['main', 'develop']
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   deploy-preview:
     name: Deploy Preview to Vercel/Netlify
@@ -69,3 +74,51 @@ jobs:
               repo: context.repo.repo,
               body: '🚀 Preview deployed! View your changes at: [Preview URL]'
             })
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const runNumber = context.runNumber;
+            const prNumber = context.payload.pull_request?.number || 'N/A';
+            const branch = context.ref.replace('refs/heads/', '');
+            const actor = context.actor;
+            const sha = context.sha.substring(0, 7);
+
+            const title = '🔴 Deploy Preview Failed - PR #' + prNumber;
+            const body = '## Deploy Preview 构建失败\n\n' +
+              '**PR:** #' + prNumber + '\n' +
+              '**分支:** ' + branch + '\n' +
+              '**提交:** ' + sha + '\n' +
+              '**触发者:** @' + actor + '\n' +
+              '**Workflow:** ' + workflow + '\n' +
+              '**Run #:** ' + runNumber + '\n\n' +
+              '### 📋 错误信息\n\n' +
+              'Deploy Preview workflow 执行失败。\n\n' +
+              '### 🔍 查看详情\n\n' +
+              '**Workflow运行日志:** https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + runId + '\n\n' +
+              '### 🛠️ 可能的原因\n\n' +
+              '- TypeScript 编译错误\n' +
+              '- 构建失败\n' +
+              '- 依赖问题\n' +
+              '- 环境配置问题\n\n' +
+              '### ✅ 修复步骤\n\n' +
+              '1. 查看上面的workflow日志链接，找到具体错误\n' +
+              '2. 本地运行 `npm run build` 复现问题\n' +
+              '3. 修复错误后提交新的commit\n' +
+              '4. PR会自动重新触发构建\n\n' +
+              '### 🤖 自动化\n\n' +
+              '这个issue由GitHub Actions自动创建，用于跟踪构建失败。\n\n' +
+              '---\n\n' +
+              '*由 Deploy Preview workflow 自动生成*';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'auto-generated']
+            });
