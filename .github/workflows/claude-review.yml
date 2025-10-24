@@ -167,3 +167,50 @@ If you prefer to fix this manually, remove the \`auto-fix\` label.
 
               console.log(`Created auto-fix issue #${issue.data.number}`);
             }
+
+      - name: Create issue on review failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = '🔴 Claude Code Review Failed' + (prNumber ? ' - PR #' + prNumber : ' - ' + branch);
+            const body = '## Claude Code Review 失败\n\n' +
+              '**分支:** ' + branch + '\n' +
+              '**提交:** ' + sha + '\n' +
+              '**Workflow:** ' + workflow + '\n\n' +
+              '### 🔍 查看详情\n\n' +
+              '**Workflow运行日志:** https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + runId + '\n\n' +
+              '### 🛠️ 可能的原因\n\n' +
+              '- **缺少 ANTHROPIC_API_KEY**: Secret未配置或已过期\n' +
+              '- **API调用失败**: API额度不足或服务不可用\n' +
+              '- **权限问题**: Workflow权限配置不正确\n\n' +
+              '### ✅ 修复步骤\n\n' +
+              '1. **检查API Key配置**:\n' +
+              '   - 前往 Settings → Secrets and variables → Actions\n' +
+              '   - 确认 `ANTHROPIC_API_KEY` 已配置且有效\n\n' +
+              '2. **验证API Key**:\n' +
+              '   - 在本地测试API Key是否可用\n' +
+              '   - 检查API额度是否充足\n\n' +
+              '3. **查看详细日志**:\n' +
+              '   - 点击上面的workflow日志链接\n' +
+              '   - 查看具体的错误信息\n\n' +
+              '### 💡 临时解决方案\n\n' +
+              '如果不需要自动Code Review，可以:\n' +
+              '- 删除或禁用 `.github/workflows/claude-review.yml`\n' +
+              '- 或移除 `ANTHROPIC_API_KEY` 触发条件检查\n\n' +
+              '---\n\n' +
+              '*由 Claude Code Review workflow 自动生成*';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'code-review', 'auto-generated']
+            });
