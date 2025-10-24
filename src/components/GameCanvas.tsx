@@ -33,6 +33,13 @@ export default function GameCanvas({ levelConfig, onGameReady }: GameCanvasProps
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
+      render: {
+        pixelArt: false,
+        antialias: true,
+        antialiasGL: true,
+        roundPixels: false,
+      },
+      resolution: window.devicePixelRatio || 1,
     };
 
     gameRef.current = new Phaser.Game(config);

@@ -151,7 +151,7 @@ export class GameScene extends Phaser.Scene {
 
     // 绘制左侧城墙（三层：阴影、侧面、顶部）
     // 左墙阴影
-    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6);
+    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6, 1); // 1 = round join
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x + shadowOffsetX, leftWallPoints[0].y + shadowOffsetY);
     for (let i = 1; i < leftWallPoints.length; i++) {
@@ -160,7 +160,7 @@ export class GameScene extends Phaser.Scene {
     graphics.strokePath();
 
     // 左墙侧面
-    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1);
+    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1, 1); // 1 = round join
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x + shadowOffsetX/2, leftWallPoints[0].y + shadowOffsetY/2);
     for (let i = 1; i < leftWallPoints.length; i++) {
@@ -169,7 +169,7 @@ export class GameScene extends Phaser.Scene {
     graphics.strokePath();
 
     // 左墙顶部
-    graphics.lineStyle(wallWidth, COLORS.WALL, 1);
+    graphics.lineStyle(wallWidth, COLORS.WALL, 1, 1); // 1 = round join
     graphics.beginPath();
     graphics.moveTo(leftWallPoints[0].x, leftWallPoints[0].y);
     for (let i = 1; i < leftWallPoints.length; i++) {
@@ -179,7 +179,7 @@ export class GameScene extends Phaser.Scene {
 
     // 绘制右侧城墙（三层：阴影、侧面、顶部）
     // 右墙阴影
-    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6);
+    graphics.lineStyle(wallWidth + 2, COLORS.WALL_DARK, 0.6, 1); // 1 = round join
     graphics.beginPath();
     graphics.moveTo(rightWallPoints[0].x + shadowOffsetX, rightWallPoints[0].y + shadowOffsetY);
     for (let i = 1; i < rightWallPoints.length; i++) {
@@ -188,7 +188,7 @@ export class GameScene extends Phaser.Scene {
     graphics.strokePath();
 
     // 右墙侧面
-    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1);
+    graphics.lineStyle(wallWidth, COLORS.WALL_SIDE, 1, 1); // 1 = round join
     graphics.beginPath();
     graphics.moveTo(rightWallPoints[0].x + shadowOffsetX/2, rightWallPoints[0].y + shadowOffsetY/2);
     for (let i = 1; i < rightWallPoints.length; i++) {
@@ -197,7 +197,7 @@ export class GameScene extends Phaser.Scene {
     graphics.strokePath();
 
     // 右墙顶部
-    graphics.lineStyle(wallWidth, COLORS.WALL, 1);
+    graphics.lineStyle(wallWidth, COLORS.WALL, 1, 1); // 1 = round join
     graphics.beginPath();
     graphics.moveTo(rightWallPoints[0].x, rightWallPoints[0].y);
     for (let i = 1; i < rightWallPoints.length; i++) {
