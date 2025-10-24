@@ -80,6 +80,9 @@ export class GameScene extends Phaser.Scene {
   private drawWalls(path: { x: number; y: number }[], offset: number): void {
     const graphics = this.add.graphics();
 
+    // Note: Phaser 3 Graphics API doesn't expose lineJoin directly
+    // The angle bisector algorithm below provides smoothed corners at path turns
+
     // 计算每个路径点的垂直向量（左侧墙点和右侧墙点）
     const leftWallPoints: { x: number; y: number }[] = [];
     const rightWallPoints: { x: number; y: number }[] = [];

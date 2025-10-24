@@ -32,6 +32,13 @@ export default function GameCanvas({ levelConfig, onGameReady }: GameCanvasProps
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        zoom: 1 / (window.devicePixelRatio || 1),
+      },
+      render: {
+        pixelArt: false,
+        antialias: true,
+        antialiasGL: true,
+        roundPixels: false,
       },
     };
 
