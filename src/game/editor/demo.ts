@@ -318,15 +318,28 @@ export function runAllDemos() {
   console.log('✅ 所有Demo运行完成！');
 }
 
+// 扩展window类型
+declare global {
+  interface Window {
+    runLevelEditorDemo: typeof runAllDemos;
+    demo1_SimpleLevel: typeof demo1_SimpleLevel;
+    demo2_UseTemplate: typeof demo2_UseTemplate;
+    demo3_PreviewLevel: typeof demo3_PreviewLevel;
+    demo4_TestAllStrategies: typeof demo4_TestAllStrategies;
+    demo5_ExportJSON: typeof demo5_ExportJSON;
+    demo6_ComparePathLengths: typeof demo6_ComparePathLengths;
+  }
+}
+
 // 如果在浏览器环境
 if (typeof window !== 'undefined') {
-  (window as any).runLevelEditorDemo = runAllDemos;
-  (window as any).demo1_SimpleLevel = demo1_SimpleLevel;
-  (window as any).demo2_UseTemplate = demo2_UseTemplate;
-  (window as any).demo3_PreviewLevel = demo3_PreviewLevel;
-  (window as any).demo4_TestAllStrategies = demo4_TestAllStrategies;
-  (window as any).demo5_ExportJSON = demo5_ExportJSON;
-  (window as any).demo6_ComparePathLengths = demo6_ComparePathLengths;
+  window.runLevelEditorDemo = runAllDemos;
+  window.demo1_SimpleLevel = demo1_SimpleLevel;
+  window.demo2_UseTemplate = demo2_UseTemplate;
+  window.demo3_PreviewLevel = demo3_PreviewLevel;
+  window.demo4_TestAllStrategies = demo4_TestAllStrategies;
+  window.demo5_ExportJSON = demo5_ExportJSON;
+  window.demo6_ComparePathLengths = demo6_ComparePathLengths;
 
   console.log('✨ 关卡编辑器Demo已加载');
   console.log('💡 可用命令：');

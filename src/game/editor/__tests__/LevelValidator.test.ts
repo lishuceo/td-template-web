@@ -310,7 +310,8 @@ describe('LevelValidator', () => {
 
   describe('塔位配置验证', () => {
     it('应该拒绝无效的策略', () => {
-      const config: any = {
+      type InvalidStrategy = 'invalid_strategy';
+      const config = {
         id: 30,
         name: 'Invalid Strategy',
         description: 'Test',
@@ -320,13 +321,13 @@ describe('LevelValidator', () => {
             { x: 500, y: 100 },
           ],
         },
-        towerSlots: { strategy: 'invalid_strategy' },
+        towerSlots: { strategy: 'invalid_strategy' as InvalidStrategy },
         waves: [
           {
             batches: [{ enemyType: 'normal', count: 5, delay: 0 }],
           },
         ],
-      };
+      } as unknown as AILevelConfig;
 
       const result = validator.validateAIConfig(config);
 
