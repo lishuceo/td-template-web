@@ -69,3 +69,64 @@ jobs:
               repo: context.repo.repo,
               body: '🚀 Preview deployed! View your changes at: [Preview URL]'
             })
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const runNumber = context.runNumber;
+            const prNumber = context.payload.pull_request?.number || 'N/A';
+            const branch = context.ref.replace('refs/heads/', '');
+            const actor = context.actor;
+            const sha = context.sha.substring(0, 7);
+
+            const title = `🔴 Deploy Preview Failed - PR #${prNumber}`;
+            const body = `## Deploy Preview 构建失败
+
+**PR:** #${prNumber}
+**分支:** \`${branch}\`
+**提交:** \`${sha}\`
+**触发者:** @${actor}
+**Workflow:** ${workflow}
+**Run #:** ${runNumber}
+
+### 📋 错误信息
+
+Deploy Preview workflow 执行失败。
+
+### 🔍 查看详情
+
+**Workflow运行日志:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}
+
+### 🛠️ 可能的原因
+
+- TypeScript 编译错误
+- 构建失败
+- 依赖问题
+- 环境配置问题
+
+### ✅ 修复步骤
+
+1. 查看上面的workflow日志链接，找到具体错误
+2. 本地运行 \`npm run build\` 复现问题
+3. 修复错误后提交新的commit
+4. PR会自动重新触发构建
+
+### 🤖 自动化
+
+这个issue由GitHub Actions自动创建，用于跟踪构建失败。
+
+---
+
+*由 Deploy Preview workflow 自动生成*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'auto-generated']
+            });

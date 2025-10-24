@@ -67,24 +67,118 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # Optional: Add test job when tests are implemented
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   needs: lint-and-typecheck
-  #
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '18'
-  #         cache: 'npm'
-  #
-  #     - name: Install dependencies
-  #       run: npm ci
-  #
-  #     - name: Run tests
-  #       run: npm test
+      - name: Create issue on build failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = `🔴 CI Build Failed${prNumber ? ` - PR #${prNumber}` : ` - ${branch}`}`;
+            const body = `## CI 构建失败
+
+**分支:** \`${branch}\`
+**提交:** \`${sha}\`
+**Workflow:** ${workflow}
+**Job:** Build
+
+### 🔍 查看详情
+
+**Workflow运行日志:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}
+
+### 🛠️ 可能的原因
+
+- TypeScript 编译错误
+- Vite 构建失败
+- 依赖版本冲突
+
+### ✅ 修复步骤
+
+1. 查看workflow日志获取具体错误信息
+2. 本地运行 \`npm run build\` 复现问题
+3. 修复错误并提交
+
+---
+
+*由 CI workflow 自动生成*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'ci', 'auto-generated']
+            });
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Create issue on test failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = context.workflow;
+            const runId = context.runId;
+            const prNumber = context.payload.pull_request?.number;
+            const branch = context.ref.replace('refs/heads/', '').replace('refs/pull/', 'PR #').replace('/merge', '');
+            const sha = context.sha.substring(0, 7);
+
+            const title = `🔴 Tests Failed${prNumber ? ` - PR #${prNumber}` : ` - ${branch}`}`;
+            const body = `## 测试失败
+
+**分支:** \`${branch}\`
+**提交:** \`${sha}\`
+**Workflow:** ${workflow}
+**Job:** Test
+
+### 🔍 查看详情
+
+**Workflow运行日志:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}
+
+### 🛠️ 可能的原因
+
+- 测试用例失败
+- 新代码破坏了现有功能
+- 测试环境问题
+
+### ✅ 修复步骤
+
+1. 查看workflow日志获取失败的测试
+2. 本地运行 \`npm test\` 复现问题
+3. 修复失败的测试
+4. 确保所有测试通过后再提交
+
+---
+
+*由 CI workflow 自动生成*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'tests', 'auto-generated']
+            });
