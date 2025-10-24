@@ -16,7 +16,6 @@ export class TowerManager {
   private slots: TowerSlot[] = [];
   private towers: Tower[] = [];
   private selectedTower: Tower | null = null;
-  private buildMode: TowerType | null = null;
   private towerIdCounter: number = 0;
 
   constructor(scene: Phaser.Scene, slotPositions: SlotPosition[]) {
@@ -80,19 +79,15 @@ export class TowerManager {
   }
 
   private onSlotClick(slot: TowerSlot): void {
-    if (this.buildMode && !slot.tower) {
-      // 建造模式
-      this.scene.events.emit('tryBuildTower', this.buildMode, slot);
-    } else if (slot.tower) {
+    if (slot.tower) {
       // 选中已建造的塔
       this.selectTower(slot.tower);
+    } else {
+      // 空槽位，显示建造菜单
+      this.scene.events.emit('showBuildMenu', slot);
     }
   }
 
-  public setBuildMode(towerType: TowerType | null): void {
-    this.buildMode = towerType;
-    this.deselectTower();
-  }
 
   public buildTower(towerType: TowerType, slot: TowerSlot): Tower | null {
     if (slot.tower) return null;
@@ -113,7 +108,6 @@ export class TowerManager {
       this.selectTower(selectedTower);
     });
 
-    this.buildMode = null;
     return tower;
   }
 
