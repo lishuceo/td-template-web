@@ -90,76 +90,82 @@ export class GameScene extends Phaser.Scene {
   private drawWalls(path: { x: number; y: number }[], offset: number, width: number): void {
     const graphics = this.add.graphics();
 
-    // 先绘制所有城墙段
-    const wallSegments: Array<{side: 'left' | 'right', points: {x: number, y: number}[]}> = [];
+    // 计算每个路径点的垂直向量（左侧墙点和右侧墙点）
+    const leftWallPoints: { x: number; y: number }[] = [];
+    const rightWallPoints: { x: number; y: number }[] = [];
 
-    for (let i = 0; i < path.length - 1; i++) {
-      const p1 = path[i];
-      const p2 = path[i + 1];
+    for (let i = 0; i < path.length; i++) {
+      const curr = path[i];
+      const prev = i > 0 ? path[i - 1] : null;
+      const next = i < path.length - 1 ? path[i + 1] : null;
 
-      // 计算路径方向的垂直向量
-      const dx = p2.x - p1.x;
-      const dy = p2.y - p1.y;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      const perpX = (-dy / len) * offset;
-      const perpY = (dx / len) * offset;
+      let perpX = 0;
+      let perpY = 0;
 
-      // 存储城墙段的端点
-      wallSegments.push({
-        side: 'left',
-        points: [
-          { x: p1.x + perpX, y: p1.y + perpY },
-          { x: p2.x + perpX, y: p2.y + perpY }
-        ]
-      });
+      if (prev && next) {
+        // 中间点：计算两段路径的平均垂直向量
+        const dx1 = curr.x - prev.x;
+        const dy1 = curr.y - prev.y;
+        const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+        const perp1X = (-dy1 / len1);
+        const perp1Y = (dx1 / len1);
 
-      wallSegments.push({
-        side: 'right',
-        points: [
-          { x: p1.x - perpX, y: p1.y - perpY },
-          { x: p2.x - perpX, y: p2.y - perpY }
-        ]
-      });
+        const dx2 = next.x - curr.x;
+        const dy2 = next.y - curr.y;
+        const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        const perp2X = (-dy2 / len2);
+        const perp2Y = (dx2 / len2);
+
+        // 平均两个垂直向量
+        perpX = ((perp1X + perp2X) / 2);
+        perpY = ((perp1Y + perp2Y) / 2);
+
+        // 归一化
+        const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
+        perpX = (perpX / perpLen) * offset;
+        perpY = (perpY / perpLen) * offset;
+      } else if (next) {
+        // 起点
+        const dx = next.x - curr.x;
+        const dy = next.y - curr.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        perpX = (-dy / len) * offset;
+        perpY = (dx / len) * offset;
+      } else if (prev) {
+        // 终点
+        const dx = curr.x - prev.x;
+        const dy = curr.y - prev.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        perpX = (-dy / len) * offset;
+        perpY = (dx / len) * offset;
+      }
+
+      leftWallPoints.push({ x: curr.x + perpX, y: curr.y + perpY });
+      rightWallPoints.push({ x: curr.x - perpX, y: curr.y - perpY });
     }
 
-    // 绘制连续的城墙路径（左侧）
+    // 绘制左侧城墙
     graphics.lineStyle(width, COLORS.WALL, 1);
-
     graphics.beginPath();
-    for (let i = 0; i < wallSegments.length; i += 2) {
-      const seg = wallSegments[i];
-      if (i === 0) {
-        graphics.moveTo(seg.points[0].x, seg.points[0].y);
-      }
-      graphics.lineTo(seg.points[1].x, seg.points[1].y);
+    graphics.moveTo(leftWallPoints[0].x, leftWallPoints[0].y);
+    for (let i = 1; i < leftWallPoints.length; i++) {
+      graphics.lineTo(leftWallPoints[i].x, leftWallPoints[i].y);
     }
     graphics.strokePath();
 
-    // 绘制连续的城墙路径（右侧）
+    // 绘制右侧城墙
     graphics.beginPath();
-    for (let i = 1; i < wallSegments.length; i += 2) {
-      const seg = wallSegments[i];
-      if (i === 1) {
-        graphics.moveTo(seg.points[0].x, seg.points[0].y);
-      }
-      graphics.lineTo(seg.points[1].x, seg.points[1].y);
+    graphics.moveTo(rightWallPoints[0].x, rightWallPoints[0].y);
+    for (let i = 1; i < rightWallPoints.length; i++) {
+      graphics.lineTo(rightWallPoints[i].x, rightWallPoints[i].y);
     }
     graphics.strokePath();
 
-    // 在转角处绘制圆形填充以平滑连接
+    // 在每个路径点处绘制圆形以平滑连接
     graphics.fillStyle(COLORS.WALL, 1);
-    for (let i = 1; i < path.length - 1; i++) {
-      const p1 = path[i];
-      const p0 = path[i - 1];
-
-      const dx = p1.x - p0.x;
-      const dy = p1.y - p0.y;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      const perpX = (-dy / len) * offset;
-      const perpY = (dx / len) * offset;
-
-      graphics.fillCircle(p1.x + perpX, p1.y + perpY, width / 2);
-      graphics.fillCircle(p1.x - perpX, p1.y - perpY, width / 2);
+    for (let i = 0; i < path.length; i++) {
+      graphics.fillCircle(leftWallPoints[i].x, leftWallPoints[i].y, width / 2);
+      graphics.fillCircle(rightWallPoints[i].x, rightWallPoints[i].y, width / 2);
     }
   }
 

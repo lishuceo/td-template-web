@@ -4,13 +4,13 @@ import type { EnemyConfig, TowerConfig } from '@/types/game';
 export const GAME_WIDTH = 1200;
 export const GAME_HEIGHT = 800;
 
-// 游戏颜色 - 参考图片配色
+// 游戏颜色 - 参考1.png图片配色
 export const COLORS = {
-  BACKGROUND: 0x87A96B,      // 浅绿色草地背景（更接近参考图）
+  BACKGROUND: 0x9DC183,      // 浅黄绿色草地（参考1.png）
   GROUND: 0x4A5F4E,          // 深绿色地面
-  PATH: 0xC4A57B,            // 浅棕/沙色路径（地面道路）
-  WALL: 0x7FB3D5,            // 浅蓝色城墙（高地）
-  WALL_DARK: 0x6495B8,       // 深蓝色城墙阴影
+  PATH: 0xD4B896,            // 浅棕色沙土路径（参考1.png）
+  WALL: 0x6B9BD1,            // 蓝灰色城墙（参考1.png）
+  WALL_DARK: 0x5A8AC0,       // 深蓝灰色城墙阴影
   SCENE: 0x00CED1,
   ENEMY_NORMAL: 0xE74C3C,    // 红色敌人
   ENEMY_ELITE: 0xF39C12,     // 橙色精英
@@ -21,8 +21,8 @@ export const COLORS = {
   TOWER_ARROW: 0xD5D5D5,     // 浅灰色箭塔
   TOWER_SLOW: 0x5DADE2,      // 蓝色减速塔
   TOWER_AOE: 0xE74C3C,       // 红色范围塔
-  SLOT: 0x99C4DD,            // 槽位颜色（浅蓝，在城墙上）
-  SLOT_HOVER: 0xB8DAED,      // 槽位悬停
+  SLOT: 0x8BB8D8,            // 槽位颜色（在城墙上）
+  SLOT_HOVER: 0xA5C9E3,      // 槽位悬停
 };
 
 // 敌人配置
